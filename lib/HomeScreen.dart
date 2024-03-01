@@ -1,5 +1,6 @@
 import 'package:crudapp/userData.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +16,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<UserData> userDetails = List.empty(growable: true);
 
-  int selectedIndex=0;
+
+  var namevalue ='';
+  int selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    getValue();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          var prefs = await SharedPreferences.getInstance();
+
                           String name = nameController.text.trim();
+                          prefs.setString('name', name);
                           int mobile = int.parse(mobileController.text.trim());
                           String address = addressController.text.trim();
 
@@ -103,14 +115,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ElevatedButton(
                         onPressed: () {
                           String name = nameController.text.trim();
+
                           int mobile = int.parse(mobileController.text.trim());
                           String address = addressController.text.trim();
 
-
-                          userDetails[selectedIndex].name=name;
-                          userDetails[selectedIndex].mobile=mobile;
-                          userDetails[selectedIndex].address=address;
-                          selectedIndex=0;
+                          userDetails[selectedIndex].name = name;
+                          userDetails[selectedIndex].mobile = mobile;
+                          userDetails[selectedIndex].address = address;
+                          selectedIndex = 0;
 
                           setState(() {
                             nameController.clear();
@@ -125,6 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
+              Text(namevalue),
+
               SizedBox(
                 height: 300,
                 child: ListView.separated(
@@ -148,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget getRow(int index) {
     return ListTile(
-      leading:  CircleAvatar(
+      leading: CircleAvatar(
         child: Text(userDetails[index].name[0]),
       ),
       trailing: SizedBox(
@@ -162,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mobileController.text = userDetails[index].mobile.toString();
                   addressController.text = userDetails[index].address;
                   setState(() {
-                    selectedIndex=index;
+                    selectedIndex = index;
                   });
                 },
                 child: const Icon(Icons.edit)),
@@ -177,5 +191,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       title: Text(userDetails[index].name ?? ''),
     );
+  }
+
+  void getValue() async{
+    var prefs = await SharedPreferences.getInstance();
+    var getName= prefs.getString('name');
+     namevalue = getName ??'no value';
   }
 }
