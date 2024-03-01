@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:crudapp/userData.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,14 +18,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<UserData> userDetails = List.empty(growable: true);
 
-
-  var namevalue ='';
   int selectedIndex = 0;
+
+  late SharedPreferences sp;
+
+  getSharedPreferences() async {
+    sp = await SharedPreferences.getInstance();
+    readFromSp();
+  }
+
+  saveIntoSp() {
+    List<String> userDetailsList =
+        userDetails.map((data) => jsonEncode(data.toJson())).toList();
+    sp.setStringList('saveData', userDetailsList);
+  }
+
+  readFromSp() {
+
+   List<String>? readSaveData= sp.getStringList('saveData');
+    if(readSaveData !=null){
+     userDetails = readSaveData.map((contact) => UserData.fromJson(jsonDecode(contact))).toList();
+    }
+    setState(() {
+
+    });
+
+  }
 
   @override
   void initState() {
     super.initState();
-    getValue();
+    getSharedPreferences();
   }
 
   @override
@@ -93,16 +118,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                        onPressed: () async {
-                          var prefs = await SharedPreferences.getInstance();
-
+                        onPressed: () {
                           String name = nameController.text.trim();
-                          prefs.setString('name', name);
+
                           int mobile = int.parse(mobileController.text.trim());
+
                           String address = addressController.text.trim();
 
                           userDetails.add(UserData(
                               name: name, mobile: mobile, address: address));
+                          saveIntoSp();
                           setState(() {
                             nameController.clear();
                             mobileController.clear();
@@ -123,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           userDetails[selectedIndex].mobile = mobile;
                           userDetails[selectedIndex].address = address;
                           selectedIndex = 0;
+                          saveIntoSp();
 
                           setState(() {
                             nameController.clear();
@@ -137,8 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(namevalue),
-
               SizedBox(
                 height: 300,
                 child: ListView.separated(
@@ -184,6 +208,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   setState(() {});
                   userDetails.removeAt(index);
+                  saveIntoSp();
+
                 },
                 child: const Icon(Icons.delete)),
           ],
@@ -191,11 +217,5 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       title: Text(userDetails[index].name ?? ''),
     );
-  }
-
-  void getValue() async{
-    var prefs = await SharedPreferences.getInstance();
-    var getName= prefs.getString('name');
-     namevalue = getName ??'no value';
   }
 }
